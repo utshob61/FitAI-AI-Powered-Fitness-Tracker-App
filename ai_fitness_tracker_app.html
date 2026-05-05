@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: #0a0a0f; color: #e8e8f0; min-height: 100vh; }
+
+  :root {
+    --green: #00e676; --green-dim: #1a3a2a; --green-mid: #00b358;
+    --purple: #7c4dff; --purple-dim: #1a1030;
+    --orange: #ff6d00; --orange-dim: #2a1800;
+    --blue: #29b6f6; --blue-dim: #0a1f2a;
+    --pink: #f06292; --pink-dim: #2a0f1a;
+    --card: #12121c; --card2: #1a1a28; --border: rgba(255,255,255,0.08);
+    --text: #e8e8f0; --muted: #888899;
+  }
+
+  .app { max-width: 420px; margin: 0 auto; padding-bottom: 100px; }
+
+  .header { padding: 20px 20px 12px; display: flex; align-items: center; justify-content: space-between; }
+  .header-left h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; }
+  .header-left p { font-size: 13px; color: var(--muted); margin-top: 2px; }
+  .avatar { width: 42px; height: 42px; border-radius: 50%; background: linear-gradient(135deg, var(--purple), var(--green)); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px; }
+
+  .tabs { display: flex; padding: 0 20px; gap: 6px; margin-bottom: 20px; }
+  .tab { flex: 1; padding: 9px 4px; border: 1px solid var(--border); border-radius: 10px; background: var(--card); font-size: 12px; font-weight: 600; color: var(--muted); cursor: pointer; text-align: center; transition: all 0.2s; }
+  .tab.active { background: var(--green); color: #000; border-color: var(--green); }
+
+  .section { padding: 0 20px; margin-bottom: 20px; }
+  .section-title { font-size: 13px; font-weight: 700; color: var(--muted); letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 12px; }
+
+  .stats-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+  .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 14px; }
+  .stat-card.full { grid-column: 1 / -1; }
+  .stat-icon { font-size: 18px; margin-bottom: 8px; }
+  .stat-value { font-size: 26px; font-weight: 800; letter-spacing: -1px; }
+  .stat-label { font-size: 11px; color: var(--muted); margin-top: 2px; font-weight: 600; }
+  .stat-bar { height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; margin-top: 10px; overflow: hidden; }
+  .stat-bar-fill { height: 100%; border-radius: 2px; transition: width 1s ease; }
+
+  .ring-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 16px; display: flex; align-items: center; gap: 16px; }
+  .ring-wrap { position: relative; width: 80px; height: 80px; flex-shrink: 0; }
+  .ring-wrap svg { transform: rotate(-90deg); }
+  .ring-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .ring-pct { font-size: 16px; font-weight: 800; }
+  .ring-sub { font-size: 9px; color: var(--muted); font-weight: 600; }
+  .ring-info h3 { font-size: 16px; font-weight: 700; }
+  .ring-info p { font-size: 12px; color: var(--muted); margin-top: 4px; line-height: 1.5; }
+
+  .workout-list { display: flex; flex-direction: column; gap: 10px; }
+  .workout-item { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: border-color 0.2s; }
+  .workout-item:hover { border-color: rgba(255,255,255,0.18); }
+  .workout-dot { width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+  .workout-info { flex: 1; }
+  .workout-name { font-size: 14px; font-weight: 700; }
+  .workout-meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .workout-badge { background: rgba(0,230,118,0.15); color: var(--green); font-size: 11px; font-weight: 700; padding: 4px 8px; border-radius: 6px; }
+
+  .ai-card { background: var(--card); border: 1px solid rgba(124,77,255,0.3); border-radius: 16px; padding: 16px; }
+  .ai-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .ai-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--purple); animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .ai-header span { font-size: 13px; font-weight: 700; color: var(--purple); }
+  .ai-messages { display: flex; flex-direction: column; gap: 8px; max-height: 200px; overflow-y: auto; margin-bottom: 12px; }
+  .ai-msg { padding: 10px 12px; border-radius: 12px; font-size: 13px; line-height: 1.5; }
+  .ai-msg.bot { background: var(--purple-dim); border: 1px solid rgba(124,77,255,0.2); }
+  .ai-msg.user { background: var(--green-dim); border: 1px solid rgba(0,230,118,0.2); text-align: right; color: var(--green); }
+  .ai-input-row { display: flex; gap: 8px; }
+  .ai-input { flex: 1; background: rgba(255,255,255,0.06); border: 1px solid var(--border); border-radius: 10px; padding: 9px 12px; color: var(--text); font-size: 13px; outline: none; }
+  .ai-input:focus { border-color: rgba(124,77,255,0.5); }
+  .ai-send { background: var(--purple); border: none; border-radius: 10px; width: 36px; height: 36px; color: #fff; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: opacity 0.2s; }
+  .ai-send:disabled { opacity: 0.4; }
+
+  .chart-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 16px; }
+  .chart-bars { display: flex; align-items: flex-end; gap: 6px; height: 80px; margin-top: 12px; }
+  .chart-bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .chart-bar { width: 100%; border-radius: 4px 4px 0 0; transition: height 0.6s ease; min-height: 4px; }
+  .chart-day { font-size: 10px; color: var(--muted); font-weight: 600; }
+
+  .log-btn { width: 100%; padding: 14px; background: linear-gradient(135deg, var(--green), #00b358); border: none; border-radius: 14px; color: #000; font-size: 15px; font-weight: 800; cursor: pointer; margin-bottom: 10px; transition: opacity 0.2s; letter-spacing: 0.3px; }
+  .log-btn:hover { opacity: 0.88; }
+
+  .quick-log { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .ql-btn { padding: 12px 8px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; color: var(--text); font-size: 12px; font-weight: 700; cursor: pointer; text-align: center; transition: all 0.2s; }
+  .ql-btn:hover { border-color: var(--green); color: var(--green); }
+
+  .streak { background: linear-gradient(135deg, rgba(255,109,0,0.15), rgba(255,109,0,0.05)); border: 1px solid rgba(255,109,0,0.3); border-radius: 14px; padding: 14px 16px; display: flex; align-items: center; gap: 12px; }
+  .streak-num { font-size: 36px; font-weight: 900; color: var(--orange); }
+  .streak-info h3 { font-size: 14px; font-weight: 700; }
+  .streak-info p { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+  .nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 420px; background: rgba(10,10,15,0.95); backdrop-filter: blur(16px); border-top: 1px solid var(--border); display: flex; padding: 8px 20px 16px; gap: 4px; }
+  .nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 4px; border-radius: 12px; border: none; background: transparent; color: var(--muted); font-size: 10px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+  .nav-btn.active { color: var(--green); background: var(--green-dim); }
+  .nav-icon { font-size: 20px; line-height: 1; }
+
+  .page { display: none; }
+  .page.active { display: block; }
+
+  .tip { background: rgba(41,182,246,0.1); border: 1px solid rgba(41,182,246,0.25); border-radius: 12px; padding: 12px 14px; font-size: 13px; color: var(--blue); line-height: 1.5; margin-bottom: 10px; }
+
+  .loading-dots { display: inline-flex; gap: 4px; }
+  .loading-dots span { width: 5px; height: 5px; border-radius: 50%; background: var(--purple); animation: bounce 1.2s infinite; }
+  .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+  .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes bounce { 0%,80%,100% { transform: scale(0.7); opacity: 0.5; } 40% { transform: scale(1); opacity: 1; } }
+
+  .progress-ring-bg { fill: none; stroke: rgba(255,255,255,0.08); stroke-width: 8; }
+  .progress-ring-fill { fill: none; stroke-width: 8; stroke-linecap: round; }
+
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 100; display: flex; align-items: flex-end; justify-content: center; }
+  .modal { background: #1a1a28; border-radius: 24px 24px 0 0; padding: 20px; width: 100%; max-width: 420px; border: 1px solid var(--border); }
+  .modal-handle { width: 40px; height: 4px; background: rgba(255,255,255,0.2); border-radius: 2px; margin: 0 auto 20px; }
+  .modal h2 { font-size: 18px; font-weight: 800; margin-bottom: 16px; }
+  .modal input, .modal select { width: 100%; background: rgba(255,255,255,0.06); border: 1px solid var(--border); border-radius: 10px; padding: 11px 14px; color: var(--text); font-size: 14px; margin-bottom: 10px; outline: none; }
+  .modal-btn { width: 100%; padding: 13px; background: var(--green); border: none; border-radius: 12px; color: #000; font-size: 14px; font-weight: 800; cursor: pointer; margin-top: 6px; }
+  .modal-cancel { width: 100%; padding: 12px; background: transparent; border: 1px solid var(--border); border-radius: 12px; color: var(--muted); font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 8px; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="header">
+    <div class="header-left">
+      <h1>FitAI</h1>
+      <p id="date-display">Loading...</p>
+    </div>
+    <div class="avatar">AK</div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('dashboard')">Dashboard</button>
+    <button class="tab" onclick="switchTab('workouts')">Workouts</button>
+    <button class="tab" onclick="switchTab('ai')">AI Coach</button>
+  </div>
+
+  <!-- DASHBOARD PAGE -->
+  <div id="page-dashboard" class="page active">
+
+    <div class="section">
+      <div class="section-title">Today's Activity</div>
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-icon">🔥</div>
+          <div class="stat-value" style="color:#ff6d00" id="cal-val">842</div>
+          <div class="stat-label">Calories Burned</div>
+          <div class="stat-bar"><div class="stat-bar-fill" id="cal-bar" style="width:68%;background:#ff6d00"></div></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">👟</div>
+          <div class="stat-value" style="color:#29b6f6" id="step-val">7,284</div>
+          <div class="stat-label">Steps</div>
+          <div class="stat-bar"><div class="stat-bar-fill" id="step-bar" style="width:73%;background:#29b6f6"></div></div>
+        </div>
+      </div>
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-icon">⏱️</div>
+          <div class="stat-value" style="color:#00e676" id="min-val">48</div>
+          <div class="stat-label">Active Minutes</div>
+          <div class="stat-bar"><div class="stat-bar-fill" id="min-bar" style="width:80%;background:#00e676"></div></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">💧</div>
+          <div class="stat-value" style="color:#7c4dff" id="water-val">1.8L</div>
+          <div class="stat-label">Hydration</div>
+          <div class="stat-bar"><div class="stat-bar-fill" id="water-bar" style="width:60%;background:#7c4dff"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Weekly Progress</div>
+      <div class="chart-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:13px;font-weight:700;">Calories Burned</span>
+          <span style="font-size:12px;color:var(--muted);">This week</span>
+        </div>
+        <div class="chart-bars" id="weekly-chart"></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Streak</div>
+      <div class="streak">
+        <div class="streak-num">🔥 <span id="streak-count">12</span></div>
+        <div class="streak-info">
+          <h3>Day Streak!</h3>
+          <p>Keep going — you're on fire! Next milestone: 14 days.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Goals</div>
+      <div class="ring-card">
+        <div class="ring-wrap">
+          <svg width="80" height="80" viewBox="0 0 80 80">
+            <circle class="progress-ring-bg" cx="40" cy="40" r="32"/>
+            <circle class="progress-ring-fill" cx="40" cy="40" r="32" stroke="#00e676" stroke-dasharray="201" stroke-dashoffset="64" id="goal-ring"/>
+          </svg>
+          <div class="ring-center">
+            <div class="ring-pct" style="color:var(--green)">68%</div>
+            <div class="ring-sub">DONE</div>
+          </div>
+        </div>
+        <div class="ring-info">
+          <h3>Weekly Fitness Goal</h3>
+          <p>5 of 7 active days · 842 of 1,200 target calories today</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">AI Tip of the Day</div>
+      <div class="tip" id="ai-tip">Loading your personalized tip...</div>
+    </div>
+
+  </div>
+
+  <!-- WORKOUTS PAGE -->
+  <div id="page-workouts" class="page">
+    <div class="section">
+      <button class="log-btn" onclick="showLogModal()">+ Log Workout</button>
+      <div class="quick-log">
+        <button class="ql-btn" onclick="quickLog('Running')">🏃 Running</button>
+        <button class="ql-btn" onclick="quickLog('Cycling')">🚴 Cycling</button>
+        <button class="ql-btn" onclick="quickLog('Weights')">🏋️ Weights</button>
+        <button class="ql-btn" onclick="quickLog('Yoga')">🧘 Yoga</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Recent Workouts</div>
+      <div class="workout-list" id="workout-list"></div>
+    </div>
+  </div>
+
+  <!-- AI COACH PAGE -->
+  <div id="page-ai" class="page">
+    <div class="section">
+      <div class="ai-card">
+        <div class="ai-header">
+          <div class="ai-dot"></div>
+          <span>AI Fitness Coach</span>
+          <span style="margin-left:auto;font-size:11px;color:var(--muted)">Powered by Claude</span>
+        </div>
+        <div class="ai-messages" id="ai-chat"></div>
+        <div class="ai-input-row">
+          <input class="ai-input" id="ai-input" placeholder="Ask your coach anything..." onkeydown="if(event.key==='Enter')sendAI()"/>
+          <button class="ai-send" id="ai-send-btn" onclick="sendAI()">↑</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Quick Questions</div>
+      <div class="quick-log">
+        <button class="ql-btn" onclick="askQuick('Best workout for fat loss?')">Fat Loss Tips</button>
+        <button class="ql-btn" onclick="askQuick('Create a 3-day workout plan for me')">Workout Plan</button>
+        <button class="ql-btn" onclick="askQuick('Post-workout nutrition advice?')">Nutrition</button>
+        <button class="ql-btn" onclick="askQuick('How to prevent muscle soreness?')">Recovery</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Bottom Nav -->
+<div class="nav">
+  <button class="nav-btn active" id="nav-dashboard" onclick="switchNav('dashboard')">
+    <span class="nav-icon">📊</span>Dashboard
+  </button>
+  <button class="nav-btn" id="nav-workouts" onclick="switchNav('workouts')">
+    <span class="nav-icon">💪</span>Workouts
+  </button>
+  <button class="nav-btn" id="nav-ai" onclick="switchNav('ai')">
+    <span class="nav-icon">🤖</span>AI Coach
+  </button>
+</div>
+
+<!-- Log Workout Modal -->
+<div id="log-modal" style="display:none" class="modal-overlay" onclick="if(event.target===this)hideModal()">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h2>Log Workout</h2>
+    <select id="wt-type">
+      <option>Running</option><option>Cycling</option><option>Weights</option>
+      <option>Yoga</option><option>Swimming</option><option>HIIT</option><option>Walking</option>
+    </select>
+    <input type="number" id="wt-dur" placeholder="Duration (minutes)" min="1" max="300"/>
+    <input type="number" id="wt-cal" placeholder="Calories burned (optional)" min="0"/>
+    <button class="modal-btn" onclick="saveWorkout()">Save Workout</button>
+    <button class="modal-cancel" onclick="hideModal()">Cancel</button>
+  </div>
+</div>
+
+<script>
+const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const workouts = [
+  { type:'Running', icon:'🏃', color:'#29b6f6', bg:'rgba(41,182,246,0.15)', dur:35, cal:320, date:'Today' },
+  { type:'Upper Body', icon:'🏋️', color:'#00e676', bg:'rgba(0,230,118,0.12)', dur:50, cal:280, date:'Yesterday' },
+  { type:'Yoga', icon:'🧘', color:'#7c4dff', bg:'rgba(124,77,255,0.15)', dur:40, cal:120, date:'Mon' },
+  { type:'Cycling', icon:'🚴', color:'#ff6d00', bg:'rgba(255,109,0,0.15)', dur:60, cal:480, date:'Sun' },
+];
+const weekData = [420,0,650,820,590,842,0];
+let chatHistory = [];
+
+function init() {
+  const now = new Date();
+  document.getElementById('date-display').textContent = now.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+  renderChart(); renderWorkouts(); loadTip();
+  addBotMsg("Hi! I'm your AI fitness coach 💪 Ask me anything about workouts, nutrition, or recovery. I can see you've been active today — great work!");
+}
+
+function renderChart() {
+  const today = new Date().getDay();
+  const max = Math.max(...weekData);
+  const html = weekData.map((v,i) => {
+    const h = max ? Math.round((v/max)*68) : 4;
+    const active = i === today;
+    const bg = active ? 'var(--green)' : (v > 0 ? 'rgba(0,230,118,0.35)' : 'rgba(255,255,255,0.06)');
+    return `<div class="chart-bar-wrap"><div class="chart-bar" style="height:${h}px;background:${bg}"></div><div class="chart-day">${days[i]}</div></div>`;
+  }).join('');
+  document.getElementById('weekly-chart').innerHTML = html;
+}
+
+function renderWorkouts() {
+  document.getElementById('workout-list').innerHTML = workouts.map(w =>
+    `<div class="workout-item">
+      <div class="workout-dot" style="background:${w.bg}"><span>${w.icon}</span></div>
+      <div class="workout-info">
+        <div class="workout-name">${w.type}</div>
+        <div class="workout-meta">${w.dur} min · ${w.cal} cal</div>
+      </div>
+      <div style="text-align:right">
+        <div class="workout-badge">${w.date}</div>
+      </div>
+    </div>`
+  ).join('');
+}
+
+async function loadTip() {
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model:'claude-sonnet-4-20250514', max_tokens:120,
+        messages:[{role:'user',content:'Give me one short, motivating fitness tip for today. Keep it under 2 sentences, practical and energizing. No emojis.'}]
+      })
+    });
+    const d = await res.json();
+    const tip = d.content?.find(c=>c.type==='text')?.text || '';
+    if(tip) document.getElementById('ai-tip').textContent = tip;
+  } catch(e) {
+    document.getElementById('ai-tip').textContent = 'Focus on progressive overload — small consistent improvements over time lead to extraordinary results.';
+  }
+}
+
+function addBotMsg(text) {
+  const el = document.createElement('div');
+  el.className = 'ai-msg bot'; el.textContent = text;
+  document.getElementById('ai-chat').appendChild(el);
+  document.getElementById('ai-chat').scrollTop = 9999;
+}
+function addUserMsg(text) {
+  const el = document.createElement('div');
+  el.className = 'ai-msg user'; el.textContent = text;
+  document.getElementById('ai-chat').appendChild(el);
+  document.getElementById('ai-chat').scrollTop = 9999;
+}
+function addLoadingMsg() {
+  const el = document.createElement('div');
+  el.className = 'ai-msg bot'; el.id = 'ai-loading';
+  el.innerHTML = '<div class="loading-dots"><span></span><span></span><span></span></div>';
+  document.getElementById('ai-chat').appendChild(el);
+  document.getElementById('ai-chat').scrollTop = 9999;
+}
+
+async function sendAI() {
+  const inp = document.getElementById('ai-input');
+  const msg = inp.value.trim(); if(!msg) return;
+  inp.value = ''; addUserMsg(msg);
+  const btn = document.getElementById('ai-send-btn'); btn.disabled = true;
+  addLoadingMsg();
+  chatHistory.push({role:'user',content:msg});
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model:'claude-sonnet-4-20250514', max_tokens:300,
+        system:'You are an expert AI fitness coach. The user has logged 12-day streak, burned 842 calories today, walked 7,284 steps. Give practical, motivating fitness advice. Keep responses under 4 sentences and conversational.',
+        messages: chatHistory
+      })
+    });
+    const d = await res.json();
+    const reply = d.content?.find(c=>c.type==='text')?.text || 'I had trouble responding. Please try again.';
+    chatHistory.push({role:'assistant',content:reply});
+    document.getElementById('ai-loading')?.remove();
+    addBotMsg(reply);
+  } catch(e) {
+    document.getElementById('ai-loading')?.remove();
+    addBotMsg('Connection issue — please try again in a moment.');
+  }
+  btn.disabled = false;
+}
+
+function askQuick(q) {
+  switchNav('ai');
+  document.getElementById('ai-input').value = q;
+  sendAI();
+}
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach((t,i) => {
+    t.classList.toggle('active', ['dashboard','workouts','ai'][i]===tab);
+  });
+  switchNav(tab);
+}
+
+function switchNav(tab) {
+  ['dashboard','workouts','ai'].forEach(t => {
+    document.getElementById('page-'+t).classList.toggle('active', t===tab);
+    document.getElementById('nav-'+t).classList.toggle('active', t===tab);
+  });
+  document.querySelectorAll('.tab').forEach((t,i) => {
+    t.classList.toggle('active', ['dashboard','workouts','ai'][i]===tab);
+  });
+}
+
+function showLogModal() { document.getElementById('log-modal').style.display='flex'; }
+function hideModal() { document.getElementById('log-modal').style.display='none'; }
+
+function quickLog(type) {
+  workouts.unshift({ type, icon:{'Running':'🏃','Cycling':'🚴','Weights':'🏋️','Yoga':'🧘'}[type]||'💪',
+    color:'#00e676', bg:'rgba(0,230,118,0.12)', dur:30, cal:200, date:'Just now' });
+  renderWorkouts();
+  document.getElementById('cal-val').textContent = (842+200).toLocaleString();
+}
+
+function saveWorkout() {
+  const type = document.getElementById('wt-type').value;
+  const dur = parseInt(document.getElementById('wt-dur').value)||30;
+  const cal = parseInt(document.getElementById('wt-cal').value)||Math.round(dur*6.5);
+  const icons = {Running:'🏃',Cycling:'🚴',Weights:'🏋️',Yoga:'🧘',Swimming:'🏊',HIIT:'⚡',Walking:'🚶'};
+  workouts.unshift({ type, icon:icons[type]||'💪', color:'#00e676', bg:'rgba(0,230,118,0.12)', dur, cal, date:'Just now' });
+  renderWorkouts(); hideModal();
+  const old = parseInt(document.getElementById('cal-val').textContent.replace(/,/g,''));
+  document.getElementById('cal-val').textContent = (old+cal).toLocaleString();
+}
+
+init();
+</script>
+</body>
+</html>
